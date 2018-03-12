@@ -24,6 +24,16 @@ class TestParser(unittest.TestCase):
         )
 
     def test_schema_with_table(self):
+        t =  """
+            create schema api;
+            create table api.todos (
+                id integer not null,
+                done boolean default false not null,
+                task text not null,
+                due timestamp with time zone
+            );
+            """
+        print(parser.parse(t))
         self.check_result(
             """
             create schema api;
@@ -39,18 +49,45 @@ class TestParser(unittest.TestCase):
                     "id": ["INTEGER"],
                     "done": ["BOOLEAN"],
                     "task": ["TEXT"],
-                    "due": ["TIMESTAMP", "NULL"]
+                    "due": ["TIMESTAMP+TZ", "NULL"]
                     }
                 }
             }
         )
 class TestParseTable(unittest.TestCase):
     def test_parse_1(self):
-        self.assertEqual(parser.parse_table("( id integer )"), {"id": ["INTEGER", "NULL"]})
+        self.assertEqual(
+            parser.parse_table(
+                ["(", "id", "INTEGER", ")"]),
+            {"id": ["INTEGER", "NULL"]})
     def test_parse_2(self):
-        self.assertEqual(parser.parse_table("( id integer, done boolean )"), {"id": ["INTEGER", "NULL"], "done": ["BOOLEAN", "NULL"]})
+        self.assertEqual(
+            parser.parse_table(
+                ["(", "id", "INTEGER", ",", "done", "BOOLEAN", ")"]),
+            {"id": ["INTEGER", "NULL"], "done": ["BOOLEAN", "NULL"]})
     def test_parse_3(self):
-        self.assertEqual(parser.parse_table("( id integer, done boolean not null )"), {"id": ["INTEGER", "NULL"], "done": ["BOOLEAN"]})
+        self.assertEqual(
+            parser.parse_table(
+                ["(", "id", "INTEGER", ",", "done", "BOOLEAN", "NOT", "NULL", ")"]),
+            {"id": ["INTEGER", "NULL"], "done": ["BOOLEAN"]})
+
+class TestTokenizer(unittest.TestCase):
+    def test_tokenize_comment(self):
+        self.assertEqual(parser.tokenize("-- bdfsbdf"), ["COMMENT"])
+    def test_tokenize_comment_2(self):
+        self.assertEqual(parser.tokenize("-- bdfsbdf\n--bdfb"), ["COMMENT", "COMMENT"])
+    def test_tokenize_1(self):
+        self.assertEqual(parser.tokenize("create schema blah;"), ["CREATE", "SCHEMA", "blah", ";"])
+    def test_tokenize_2(self):
+        self.assertEqual(parser.tokenize("create schema blah; -- gdfg feg eggds \nCREATE Table pu;"), ["CREATE", "SCHEMA", "blah", ";", "COMMENT", "CREATE", "TABLE", "pu", ";"])
+    def test_tokenize_3(self):
+        self.assertEqual(parser.tokenize("create table blah.bleu;"), ["CREATE", "TABLE", "blah.bleu", ";"])
+
+class TestContains(unittest.TestCase):
+    def test_contains_1(self):
+        self.assertTrue(parser.contains(["a", "b", "c", "d"], ["c", "d"]))
+    def test_starts_1(self):
+        self.assertTrue(parser.starts(["a", "b"], ["a", "b"]))
 
 if __name__ == '__main__':
     unittest.main()
