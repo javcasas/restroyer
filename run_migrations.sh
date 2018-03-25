@@ -1,2 +1,2 @@
 #!/bin/sh
-sudo docker run --rm postgres psql postgres://app_user:password@192.168.1.8:5432/app_db -c "`cat migrations.sql`"
+sudo docker exec -it restroyer_db_1 psql postgres://app_user:password@localhost:5432/app_db -c "`cat migrations.sql`"

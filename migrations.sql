@@ -23,3 +23,20 @@ grant todo_user to postgres;
 grant usage on schema api to todo_user;
 grant all on api.todos to todo_user;
 grant usage, select on sequence api.todos_id_seq to todo_user;
+
+-- Authentication
+create schema auth;
+grant usage on schema auth to web_anon, todo_user;
+
+create or replace function auth.check_token() returns void
+  language plpgsql
+  as $$
+begin
+  if current_setting('request.jwt.claim.email', true) =
+     'disgruntled@mycompany.com' then
+    raise insufficient_privilege
+      using hint = 'Nope, we are on to you';
+  end if;
+end
+$$;
+
