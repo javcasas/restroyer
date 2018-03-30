@@ -2,8 +2,8 @@ version: '3'
 services:
   server:
     image: postgrest/postgrest
-    ports:
-      - "3000:3000"
+    #ports:
+    #  - "3000:3000"
     links:
       - db:db
     environment:
@@ -15,8 +15,8 @@ services:
 
   db:
     image: postgres
-    ports:
-      - "5432:5432"
+    #ports:
+    #  - "5432:5432"
     environment:
       POSTGRES_DB: app_db
       POSTGRES_USER: app_user
@@ -31,4 +31,5 @@ services:
   frontend:
     build:
       context: ./frontend
+    image: frontend
   

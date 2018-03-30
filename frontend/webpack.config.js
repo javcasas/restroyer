@@ -6,7 +6,7 @@ module.exports = {
   entry: './src/index.ts',
   output: {
     path: path.resolve(__dirname, './dist'),
-    publicPath: '/dist/',
+    publicPath: '/',
     filename: 'index.js'
   },
   module: {
@@ -58,7 +58,8 @@ module.exports = {
   devtool: '#eval-source-map',
   plugins: [
     new HtmlWebpackPlugin({
-      title: "Restroyer"
+      title: "Restroyer",
+      template: "static/index.html"
     })
   ]
 }

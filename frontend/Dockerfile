@@ -8,7 +8,10 @@ RUN rm -rf dist
 RUN NODE_ENV=production npm run-script build
 
 FROM mhart/alpine-node:9
-WORKDIR /app
+WORKDIR /app/workdir
 COPY --from=prod_build /app/dist /app/dist
-COPY --from=prod_build /app/bin/server.js /app
+WORKDIR /app/server
+COPY --from=prod_build /app/server/ /app/server
+RUN npm install
+EXPOSE 3000
 CMD node server.js
