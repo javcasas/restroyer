@@ -25,6 +25,10 @@ services:
   nginx:
     build:
       context: ./containers/nginx
-      dockerfile: dockerfile
     ports:
       - "8080:80"
+  
+  frontend:
+    build:
+      context: ./frontend
+  
