@@ -1,0 +1,4 @@
+DROP SCHEMA api CASCADE;
+DROP SCHEMA auth CASCADE;
+DROP ROLE web_anon;
+DROP ROLE todo_user;
