@@ -6,7 +6,11 @@ class TestMigrationsRunProperly(test_base.TestBase):
 
     def test_all_todos_exist(self):
         self.cursor.execute("select * from api.todos;")
-        self.assertEqual(self.cursor.fetchall(), [(1, False, 'finish tutorial 0', None), (2, False, 'pat self on back', None)])
+        self.assertEqual(self.cursor.fetchall(),
+            [(1, False, 'finish tutorial 0', None),
+             (2, False, 'pat self on back', None)
+            ]
+        )
 
     def test_all_schemas_exists(self):
         self.cursor.execute("select schema_name from information_schema.schemata;")

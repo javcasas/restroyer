@@ -1,9 +1,5 @@
-import unittest
 import os
-import time
-import requests
 import psycopg2
-from psycopg2.extensions import parse_dsn
 
 pg = psycopg2.connect(os.environ["DB_CONN_STRING"])
 
