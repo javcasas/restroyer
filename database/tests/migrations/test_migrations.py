@@ -25,11 +25,17 @@ class TestMigrationsRunProperly(test_base.TestBase):
         self.assertIn(("web_anon",), roles)
         self.assertIn(("todo_user",), roles)
 
+    def assertSuccess(self, req):
+        self.assertEqual(req.status_code, 200)
+
+    def assertSuccessNoContent(self, req):
+        self.assertEqual(req.status_code, 204)
+
     def assertSuccessWith(self, req, to_compare):
         self.assertEqual(req.status_code, 200)
         self.assertEqual(req.json(), to_compare)
 
-    def assertNoAuth(self, req, to_compare):
+    def assertNoAuth(self, req):
         self.assertEqual(req.status_code, 401)
         res = req.json()
         self.assertIsNone(res.get('hint'))
@@ -54,6 +60,31 @@ class TestMigrationsRunProperly(test_base.TestBase):
             }
         ])
 
+    def test_fail_create_todos(self):
+        req = requests.post("http://localhost:3000/todos",
+            {
+                'done': False,
+                'due': None,
+                'id': 2,
+                'task': 'pat self on back'
+            }
+            )
+        self.assertNoAuth(req)
+
     def test_fail_patch_todos(self):
         req = requests.patch("http://localhost:3000/todos", {"done": True})
-        self.assertNoAuth(req, "a")
+        self.assertNoAuth(req)
+
+    def test_fail_delete_todos(self):
+        req = requests.delete("http://localhost:3000/todos")
+        self.assertNoAuth(req)
+
+    def test_authed_patch_todos(self):
+        secret = u"3jPpMqZaBRpVOJsME54DtzLGclCAw7d0"
+        token = str(jwt.encode({"role": "todo_user"}, secret, algorithm='HS256'))
+        correct_token = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJyb2xlIjoidG9kb191c2VyIn0._mlOzX51SFWT5PZvWHjFJJ7nR4Ch7E8tGYK5mpOn2so"
+        print(token==correct_token)
+        #self.assertEqual(token, "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJyb2xlIjoidG9kb191c2VyIn0._mlOzX51SFWT5PZvWHjFJJ7nR4Ch7E8tGYK5mpOn2so")
+        req = requests.patch("http://localhost:3000/todos", {"done": True}, headers={"Authorization": "Bearer "+correct_token})
+        print(req)
+        self.assertSuccessNoContent(req)

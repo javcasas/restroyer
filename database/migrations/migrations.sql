@@ -8,9 +8,6 @@ create table api.todos (
   due timestamptz
 );
 
-insert into api.todos (task) values
-  ('finish tutorial 0'), ('pat self on back');
-
 -- Anonymous user
 create role web_anon nologin;
 grant web_anon to postgres;
