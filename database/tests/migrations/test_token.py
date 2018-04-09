@@ -13,9 +13,5 @@ class TestJWT(unittest.TestCase):
         correct_token = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJyb2xlIjoidG9kb191c2VyIn0._mlOzX51SFWT5PZvWHjFJJ7nR4Ch7E8tGYK5mpOn2so"
         [a, b, sign] = str(token).split(".")
         [ga, gb, gsign] = str(correct_token).split(".")
-        print(token)
-        print(base64.standard_b64decode(a+ "===="))
-        print(base64.standard_b64decode(b+ "="))
-        self.assertEqual(a, ga)
-        self.assertEqual(b, gb)
-        self.assertEqual(sign, gsign)
+        source = jwt.decode(correct_token, secret, algorithms=['HS256'])
+        self.assertEqual(source, message)
