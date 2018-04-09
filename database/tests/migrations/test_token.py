@@ -9,7 +9,6 @@ class TestJWT(unittest.TestCase):
         message = {"role": "todo_user"}
         token = jwt.encode(message, secret, algorithm='HS256')
 
-        #token = jwt.encode(message, secret, algorithm='HS256')
         correct_token = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJyb2xlIjoidG9kb191c2VyIn0._mlOzX51SFWT5PZvWHjFJJ7nR4Ch7E8tGYK5mpOn2so"
         [a, b, sign] = str(token).split(".")
         [ga, gb, gsign] = str(correct_token).split(".")

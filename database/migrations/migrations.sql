@@ -39,3 +39,32 @@ begin
 end
 $$;
 
+create schema backend;
+create table backend.users (
+  id serial primary key,
+  username text not null,
+  password text not null
+);
+
+CREATE TYPE jwt_token AS (
+  token text
+);
+
+CREATE EXTENSION pgjwt CASCADE;
+
+CREATE FUNCTION jwt_test() RETURNS public.jwt_token
+    LANGUAGE sql
+    AS $$
+  SELECT sign(
+    row_to_json(r), current_setting('app.jwt_secret')
+  ) AS token
+  FROM (
+    SELECT
+      'my_role'::text as role,
+      extract(epoch from now())::integer + 300 AS exp
+  ) r;
+$$;
+
+ALTER DATABASE postgres SET "app.jwt_secret" TO 'reallyreallyreallyreallyverysafe';
+
+

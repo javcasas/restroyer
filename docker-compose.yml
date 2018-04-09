@@ -1,7 +1,9 @@
 version: '3'
 services:
   server:
-    image: postgrest/postgrest
+    build:
+      context: containers/postgresql
+    image: postgres-backend
     #ports:
     #  - "3000:3000"
     links:
