@@ -80,11 +80,7 @@ class TestMigrationsRunProperly(test_base.TestBase):
         self.assertNoAuth(req)
 
     def test_authed_patch_todos(self):
-        secret = u"3jPpMqZaBRpVOJsME54DtzLGclCAw7d0"
-        token = str(jwt.encode({"role": "todo_user"}, secret, algorithm='HS256'))
-        correct_token = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJyb2xlIjoidG9kb191c2VyIn0._mlOzX51SFWT5PZvWHjFJJ7nR4Ch7E8tGYK5mpOn2so"
-        print(token==correct_token)
-        #self.assertEqual(token, "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJyb2xlIjoidG9kb191c2VyIn0._mlOzX51SFWT5PZvWHjFJJ7nR4Ch7E8tGYK5mpOn2so")
-        req = requests.patch("http://localhost:3000/todos", {"done": True}, headers={"Authorization": "Bearer "+correct_token})
-        print(req)
+        secret = "3jPpMqZaBRpVOJsME54DtzLGclCAw7d0"
+        token = jwt.encode({"role": "todo_user"}, secret, algorithm='HS256').decode("utf-8")
+        req = requests.patch("http://localhost:3000/todos", {"done": True}, headers={"Authorization": "Bearer " + token})
         self.assertSuccessNoContent(req)
