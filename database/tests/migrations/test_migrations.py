@@ -4,6 +4,11 @@ import jwt
 
 class TestMigrationsRunProperly(test_base.TestBase):
 
+    def setUp(self):
+        super(TestMigrationsRunProperly, self).setUp()
+        secret = "3jPpMqZaBRpVOJsME54DtzLGclCAw7d0"
+        self.netTester = NetTester({"role": "todo_user"}, secret)
+
     def test_all_todos_exist(self):
         self.cursor.execute("select * from api.todos;")
         self.assertEqual(self.cursor.fetchall(),
@@ -80,7 +85,24 @@ class TestMigrationsRunProperly(test_base.TestBase):
         self.assertNoAuth(req)
 
     def test_authed_patch_todos(self):
-        secret = "3jPpMqZaBRpVOJsME54DtzLGclCAw7d0"
-        token = jwt.encode({"role": "todo_user"}, secret, algorithm='HS256').decode("utf-8")
-        req = requests.patch("http://localhost:3000/todos", {"done": True}, headers={"Authorization": "Bearer " + token})
+        req = self.netTester.patch("http://localhost:3000/todos", {"done": True})
         self.assertSuccessNoContent(req)
+
+class NetTester:
+    def __init__(self, claims, secret):
+        self.token = jwt.encode(claims, secret, algorithm='HS256').decode("utf-8")
+
+    def get_headers(self):
+        return {"Authorization": "Bearer " + self.token}
+
+    def get(self, url):
+        return requests.get(url, headers=self.get_headers())
+
+    def post(self, url, data):
+        return requests.post(url, data, headers=self.get_headers())
+
+    def patch(self, url, data):
+        return requests.patch(url, data, headers=self.get_headers())
+
+    def delete(self, url):
+        return requests.delete(url, headers=self.get_headers())
