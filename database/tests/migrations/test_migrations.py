@@ -1,13 +1,28 @@
 import test_base
 import requests
 import jwt
+import functools
+
+def NetTester(secret=None, claims=None):
+    headers = {}
+    if secret and claims:
+        token = jwt.encode(claims, secret, algorithm='HS256').decode("utf-8")
+        headers["Authorization"] = "Bearer " + token
+    class NT: pass
+    x = NT()
+    for method in ["get", "post", "patch", "delete"]:
+        x.__setattr__(method, functools.partial(requests.__getattribute__(method), headers=headers))
+    return x
 
 class TestMigrationsRunProperly(test_base.TestBase):
 
     def setUp(self):
         super(TestMigrationsRunProperly, self).setUp()
-        secret = "3jPpMqZaBRpVOJsME54DtzLGclCAw7d0"
-        self.netTester = NetTester({"role": "todo_user"}, secret)
+        self.noAuthNetTester = NetTester()
+        self.authedNetTester = NetTester(
+                            secret="3jPpMqZaBRpVOJsME54DtzLGclCAw7d0",
+                            claims={"role": "todo_user"}
+                        )
 
     def test_all_todos_exist(self):
         self.cursor.execute("select * from api.todos;")
@@ -49,7 +64,7 @@ class TestMigrationsRunProperly(test_base.TestBase):
         self.assertEqual(res['code'], '42501')
 
     def test_get_todos(self):
-        req = requests.get("http://localhost:3000/todos")
+        req = self.noAuthNetTester.get("http://localhost:3000/todos")
         self.assertSuccessWith(req, [
             {
                 'done': False,
@@ -85,24 +100,5 @@ class TestMigrationsRunProperly(test_base.TestBase):
         self.assertNoAuth(req)
 
     def test_authed_patch_todos(self):
-        req = self.netTester.patch("http://localhost:3000/todos", {"done": True})
+        req = self.authedNetTester.patch("http://localhost:3000/todos", {"done": True})
         self.assertSuccessNoContent(req)
-
-class NetTester:
-    def __init__(self, claims, secret):
-        self.token = jwt.encode(claims, secret, algorithm='HS256').decode("utf-8")
-
-    def get_headers(self):
-        return {"Authorization": "Bearer " + self.token}
-
-    def get(self, url):
-        return requests.get(url, headers=self.get_headers())
-
-    def post(self, url, data):
-        return requests.post(url, data, headers=self.get_headers())
-
-    def patch(self, url, data):
-        return requests.patch(url, data, headers=self.get_headers())
-
-    def delete(self, url):
-        return requests.delete(url, headers=self.get_headers())
