@@ -102,3 +102,32 @@ class TestMigrationsRunProperly(test_base.TestBase):
     def test_authed_patch_todos(self):
         req = self.authedNetTester.patch("http://localhost:3000/todos", {"done": True})
         self.assertSuccessNoContent(req)
+
+    def test_there_is_a_user_table(self):
+        self.cursor.execute("select * from backend.users;")
+        self.assertEqual(self.cursor.fetchall(),
+            []
+        )
+
+    def test_the_user_table_contains_user_password_role(self):
+        self.cursor.execute("insert into backend.users (uname, pw, role) values ('john','secret','todo_user');")
+        self.cursor.execute("select * from backend.users;")
+        self.assertEqual(self.cursor.fetchall(),
+            [(1, "john", "secret", "todo_user")]
+        )
+
+    def test_authing(self):
+        self.cursor.execute("""
+                insert into backend.users (uname, pw, role)
+                values ('john','secret','todo_user');""")
+        v = self.noAuthNetTester.post("http://localhost:3000/rpc/login",
+                {"username": "john", "password": "secret"})
+        self.assertIn("token", v.json()[0])
+
+    def test_no_authing(self):
+        self.cursor.execute("""
+                insert into backend.users (uname, pw, role)
+                values ('john','secret','todo_user');""")
+        v = self.noAuthNetTester.post("http://localhost:3000/rpc/login",
+                {"username": "john", "password": "bad_password"})
+        self.assertEqual(v.json(), [{"token": None}])
