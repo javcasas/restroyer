@@ -4,7 +4,11 @@ import unittest
 class TestBase(unittest.TestCase):
 
     def setUp(self):
-        migrate.runMigrations()
+        try:
+            migrate.runMigrations()
+        except:
+            self.tearDown()
+            raise
         self.cursor = migrate.getPostgres()
 
     def tearDown(self):

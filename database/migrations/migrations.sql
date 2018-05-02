@@ -1,74 +1,74 @@
 -- API definition
 -- This is exposed by PostgREST
-create schema api;
-create table api.todos (
-  id serial primary key,
-  done boolean not null default false,
-  task text not null,
-  due timestamptz
+CREATE SCHEMA api;
+CREATE TABLE api.todos (
+  id SERIAL PRIMARY KEY,
+  done BOOLEAN NOT NULL DEFAULT FALSE,
+  task TEXT NOT NULL,
+  due TIMESTAMPTZ
 );
 
 -- Anonymous user
-create role web_anon nologin;
-grant web_anon to postgres;
+CREATE ROLE web_anon NOLOGIN;
+GRANT web_anon TO postgres;
 
-grant usage on schema api to web_anon;
-grant select on api.todos to web_anon;
+GRANT USAGE ON SCHEMA api TO web_anon;
+GRANT SELECT ON api.todos TO web_anon;
 
-create role todo_user nologin;
-grant todo_user to postgres;
+CREATE ROLE todo_user NOLOGIN;
+GRANT todo_user TO postgres;
 
-grant usage on schema api to todo_user;
-grant all on api.todos to todo_user;
-grant usage, select on sequence api.todos_id_seq to todo_user;
+GRANT USAGE ON SCHEMA api TO todo_user;
+GRANT ALL ON api.todos TO todo_user;
+GRANT USAGE, SELECT ON SEQUENCE api.todos_id_seq TO todo_user;
 
 -- Authentication schema
-create schema auth;
+CREATE SCHEMA auth;
 -- Both web_anon and todo_user can user the authentication schema
-grant usage on schema auth to web_anon, todo_user;
+GRANT USAGE ON SCHEMA auth TO web_anon, todo_user;
 
-create or replace function auth.check_token() returns void
-  language plpgsql
-  as $$
-begin
-  if current_setting('request.jwt.claim.email', true) =
-     'disgruntled@mycompany.com' then
-    raise insufficient_privilege
-      using hint = 'Nope, we are on to you';
-  end if;
-end
+CREATE OR REPLACE FUNCTION auth.check_token() RETURNS VOID
+  LANGUAGE plpgsql
+  AS $$
+BEGIN
+  IF current_setting('request.jwt.claim.email', true) =
+     'disgruntled@mycompany.com' THEN
+    RAISE insufficient_privilege
+      USING hint = 'Nope, we are on to you';
+  END IF;
+END
 $$;
 
-create schema backend;
-create table backend.users (
-  id serial primary key,
-  uname text not null,
-  pw text not null,
-  role text not null
+CREATE SCHEMA backend;
+CREATE TABLE backend.users (
+  id SERIAL PRIMARY KEY,
+  uname TEXT NOT NULL,
+  pw TEXT NOT NULL,
+  role TEXT NOT NULL
 );
 
 CREATE TYPE jwt_token AS (
-  token text
+  token TEXT
 );
 
 CREATE EXTENSION pgjwt CASCADE;
 
-ALTER DATABASE postgres SET "app.jwt_secret" TO '3jPpMqZaBRpVOJsME54DtzLGclCAw7d0';
-
-grant usage on schema backend to web_anon;
-grant select on table backend.users to web_anon;
-CREATE FUNCTION api.login(username text, password text) RETURNS public.jwt_token
+GRANT USAGE ON SCHEMA backend TO web_anon;
+GRANT SELECT ON TABLE backend.users TO web_anon;
+CREATE FUNCTION api.login(username TEXT, password TEXT) RETURNS public.jwt_token
     LANGUAGE sql
     AS $$
   SELECT sign(
-    row_to_json(r), '3jPpMqZaBRpVOJsME54DtzLGclCAw7d0' --current_setting('app.jwt_secret')
-  ) AS token
+    row_to_json(r),
+    configuration.get_config('app.jwt_secret')
+    )
+  AS token
   FROM (
     SELECT
-      users.role as role,
-      users.uname as username,
-      extract(epoch from now())::integer + 300 AS exp
-      FROM backend.users as users
+      users.role AS role,
+      users.uname AS username,
+      extract(epoch FROM NOW())::integer + 300 AS exp
+      FROM backend.users AS users
       WHERE users.uname = username AND users.pw = password
       LIMIT 1
   ) r;
