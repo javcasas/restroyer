@@ -57,8 +57,10 @@ GRANT USAGE ON SCHEMA backend TO web_anon;
 GRANT SELECT ON TABLE backend.users TO web_anon;
 CREATE FUNCTION api.login(username TEXT, password TEXT) RETURNS public.jwt_token
     LANGUAGE sql
+    SECURITY DEFINER
+    SET search_path = public
     AS $$
-  SELECT sign(
+  SELECT public.sign(
     row_to_json(r),
     configuration.get_config('app.jwt_secret')
     )
@@ -74,3 +76,4 @@ CREATE FUNCTION api.login(username TEXT, password TEXT) RETURNS public.jwt_token
   ) r;
 $$;
 
+grant execute on function api.login(text, text) to web_anon;

@@ -1,4 +1,4 @@
-FROM postgres:10.3-alpine
+FROM postgres:10.5-alpine
 
 RUN apk update && apk upgrade &&  apk add --no-cache git openssh make && \
     cd ~ && git clone https://github.com/michelp/pgjwt.git && \

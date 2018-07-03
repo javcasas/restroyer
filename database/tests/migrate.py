@@ -21,3 +21,6 @@ def resetDb():
     with open("../migrations/undo_migrations.sql") as f:
         undo_migrations = f.read()
     getPostgres().execute("begin transaction; " + undo_migrations + "commit;")
+
+if __name__ == "__main__":
+    runMigrations()
