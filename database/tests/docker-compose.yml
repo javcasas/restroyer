@@ -14,6 +14,7 @@ services:
       PGRST_PRE_REQUEST: auth.check_token 
 
   db:
+    build: ../../containers/postgresql
     image: postgres-backend
     ports:
       - "5432:5432"
